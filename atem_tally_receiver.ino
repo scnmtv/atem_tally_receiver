@@ -3,7 +3,7 @@
 
    - pins 2,3,4 - address pins
    - pin 5 - LED output with driver
-  
+
   29.3.2018 - Ferbi
 
 */
@@ -17,10 +17,13 @@
 RF24 radio(9, 10);
 
 // Topology
-const uint64_t pipes[2] = { 0xABCDABCD71LL, 0x544d52687CLL };              // Radio pipe addresses for the 2 nodes to communicate.
+const uint64_t pipes[2] = { 0xABCDABFF51LL, 0x544d52687CAA };              // Radio pipe addresses for the 2 nodes to communicate.
 
 // node ID
 uint8_t nodeID = 0;
+
+// receivedData over RF
+uint8_t receivedData = 0;
 
 void setup() {
 
@@ -47,34 +50,47 @@ void setup() {
   pinMode(5, OUTPUT);
 
   // get ID
-  nodeID = getNodeID();     // gre od 0 - pri shiftu
+  nodeID = getNodeID();     // gre od 1 naprej
   Serial.print("\n\rnodeID: ");
   Serial.println(nodeID);
 
   // starting...
-  Serial.println("starting node...");
-  delay(2000);
+  Serial.print("starting receiver node...");
+  delay(3000);
+  Serial.print("DONE!");
 }
 
 void loop(void) {
 
-  //uint8_t tt = receiveData();
-  //Serial.println(tt, BIN);
-  //Serial.println(nodeID);
-
-  if( ((receiveData() & ( 1 << nodeID )) >> nodeID) == true) 
-    tally(true);
-  else 
-    tally(false);
+  check();
 
   // can be lowered
   delay(10);
 }
 
-void tally(bool state){
+void check() {
+  
+  receivedData = receiveData();
+  if (receivedData != 0) {
+    //Serial.println(receivedData, BIN);
+    //Serial.println( nbit(receivedData, nodeID) );
+    if ( nbit(receivedData, nodeID) == true) {
+      //Serial.println("turning LED on...");
+      tally(true);
+    }
+    else
+      tally(false);
+  }
+}
+
+bool nbit(uint8_t number, uint8_t n) {
+  return (number >> n - 1) & 1;
+}
+
+void tally(bool state) {
 
   //Serial.println(state);
-  if (state) digitalWrite(5, HIGH); 
+  if (state) digitalWrite(5, HIGH);
   else digitalWrite(5, LOW);
 }
 
@@ -86,14 +102,14 @@ uint8_t getNodeID() {
     nodeID = nodeID | temp;
   }
   //Serial.println(( B00000111 ^ nodeID),BIN);
-  return (B00000111 ^ nodeID);
+  return (B00000111 ^ nodeID)+1;                // added 1, first node if b00000000
 }
 
 uint8_t receiveData() {
 
   // receiveing data  -> no ACK - multireceiver network
   byte pipeNo;
-  byte gotByte;                                       // Dump the payloads until we've gotten everything
+  byte gotByte = 0;                                       // ignored, if we receive 0's
   while ( radio.available(&pipeNo)) {
     radio.read( &gotByte, 1 );
     // radio.writeAckPayload(pipeNo, &gotByte, 1 );
