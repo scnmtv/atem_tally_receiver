@@ -33,6 +33,7 @@ void setup() {
 
   // Setup and configure rf radio
   radio.begin();
+  radio.setChannel(110);                  //set channel
   radio.setPALevel(RF24_PA_LOW);          // MIN, LOW, HIGH, MAX
   radio.setAutoAck(0);                    // Ensure autoACK is enabled
   //  radio.enableAckPayload();               // Allow optional ack payloads
