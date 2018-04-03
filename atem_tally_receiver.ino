@@ -1,8 +1,11 @@
 /*
   Custom nrf24L01 atem tally receiver module with arduino-pro
 
+  IMPORTANT: library used - https://github.com/nRF24/RF24
+
    - pins 2,3,4 - address pins
    - pin 5 - LED output with driver
+   - adjust radio.setChannel(CH) between 0-125 (2.400MHz - 2.525MHz)
 
   29.3.2018 - Ferbi
 
@@ -66,7 +69,7 @@ void loop(void) {
   check();
 
   // can be lowered
-  delay(10);
+  delay(20);
 }
 
 void check() {
